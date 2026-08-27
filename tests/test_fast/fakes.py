@@ -1,0 +1,79 @@
+from http.server import SimpleHTTPRequestHandler
+from pathlib import Path
+from typing import Any
+
+from aiogram.types import FSInputFile
+
+from src.domain.clip import Clip
+from src.domain.clips import Clips
+from src.domain.fault import Fault
+from src.domain.friend import Friend, StoredFriend
+from src.domain.friends import Friends
+
+
+class FakeUser:
+    def __init__(self, id: int, username: str | None = None):
+        self.id = id
+        self.username = username
+
+
+class FakeMessage:
+    def __init__(self, text: str = "", sender: FakeUser | None = None):
+        self.text = text
+        self.from_user = sender
+        self.replies: list[str] = []
+        self.videos: list[FSInputFile] = []
+
+    async def answer(self, text: str):
+        self.replies.append(text)
+
+    async def answer_video(self, video: FSInputFile):
+        self.videos.append(video)
+
+
+class FakeClip(Clip):
+    def __init__(self, file: Path):
+        self.origin = file
+
+    async def file(self) -> Path:
+        return self.origin
+
+
+class BrokenClip(Clip):
+    async def file(self) -> Path:
+        raise Fault("The clip is broken.")
+
+
+class FakeClips(Clips):
+    def __init__(self, clip: Clip):
+        self.origin = clip
+
+    def clip(self, link: str) -> Clip:
+        return self.origin
+
+
+class FakeFriends(Friends):
+    def __init__(self, names: list[str]):
+        self.names = names
+
+    async def add(self, name: str) -> None:
+        self.names.append(name)
+
+    async def remove(self, name: str) -> None:
+        self.names.remove(name)
+
+    async def roster(self) -> list[Friend]:
+        return [StoredFriend(name) for name in self.names]
+
+
+class FakeHandler:
+    def __init__(self):
+        self.events: list[Any] = []
+
+    async def __call__(self, event: Any, data: dict[str, Any]) -> None:
+        self.events.append(event)
+
+
+class FakeSite(SimpleHTTPRequestHandler):
+    def log_message(self, *args):
+        pass

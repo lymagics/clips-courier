@@ -1,0 +1,16 @@
+.git
+.github
+.claude
+.idea
+.venv
+.env
+.env.example
+.coverage
+.pytest_cache
+.ruff_cache
+__pycache__
+courier.db
+tests
+tmp
+specs
+Makefile
