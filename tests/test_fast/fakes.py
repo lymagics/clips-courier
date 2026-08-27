@@ -1,6 +1,5 @@
-from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 from aiogram.types import FSInputFile
 
@@ -74,6 +73,27 @@ class FakeHandler:
         self.events.append(event)
 
 
-class FakeSite(SimpleHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
+class FakeTool:
+    def __init__(self, file: Path):
+        self.file = file
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *trash: object) -> bool:
+        return False
+
+    def extract_info(self, link: str) -> dict[str, Any]:
+        self.file.write_bytes(b"\x00\x00\x00\x18ftypmp42-fake")
+        return {"requested_downloads": [{"filepath": str(self.file)}]}
+
+
+class BrokenTool:
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *trash: object) -> bool:
+        return False
+
+    def extract_info(self, link: str) -> dict[str, Any]:
+        raise Fault("There is no video behind the link.")

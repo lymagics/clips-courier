@@ -1,3 +1,4 @@
+import logging
 from os import environ
 from pathlib import Path
 from tempfile import gettempdir
@@ -20,11 +21,22 @@ load_dotenv()
 
 owner = int(environ["OWNER_ID"])
 friends = SqliteFriends(Path(environ.get("DB_PATH", "courier.db")))
+clips = YtdlpClips(
+    Path(gettempdir()),
+    {
+        "quiet": True,
+        "no_warnings": True,
+        "noprogress": True,
+        "retries": 3,
+        "socket_timeout": 30,
+        "logger": logging.getLogger("yt_dlp"),
+    },
+)
 
 dispatcher = Bot(
     StartCommand(environ.get("BOT_NAME", "")),
     HelpCommand(environ.get("BOT_NAME", ""), owner),
-    TrustedCommand(DownloadCommand(YtdlpClips(Path(gettempdir()))), owner, friends),
+    TrustedCommand(DownloadCommand(clips), owner, friends),
     OwnedCommand(FriendCommand(friends), owner),
     OwnedCommand(FriendsCommand(friends), owner),
     OwnedCommand(RemovalCommand(friends), owner),
