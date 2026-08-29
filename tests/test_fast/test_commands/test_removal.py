@@ -7,7 +7,7 @@ from tests.test_fast.fakes import FakeFriends, FakeMessage
 
 async def test_removes_friend_from_list():
     friends = FakeFriends(["stone_finch"])
-    await RemovalCommand(friends).answer(FakeMessage("/r @stone_finch"))
+    await RemovalCommand(friends).answer(FakeMessage("/kf @stone_finch"))
     assert_that(
         friends.names,
         not_(has_item("stone_finch")),
@@ -16,7 +16,7 @@ async def test_removes_friend_from_list():
 
 
 async def test_confirms_removal():
-    message = FakeMessage("/r @pale_viper")
+    message = FakeMessage("/kf @pale_viper")
     await RemovalCommand(FakeFriends(["pale_viper"])).answer(message)
     assert_that(
         message.replies[0],
@@ -26,11 +26,11 @@ async def test_confirms_removal():
 
 
 async def test_shows_usage_when_username_missing():
-    message = FakeMessage("/r")
+    message = FakeMessage("/kf")
     await RemovalCommand(FakeFriends([])).answer(message)
     assert_that(
         message.replies[0],
-        contains_string("/r @username"),
+        contains_string("/kf @username"),
         "The removal command must show its usage when no username is given",
     )
 
