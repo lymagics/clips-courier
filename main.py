@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import gettempdir
 
 from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from src.bot import Bot
 from src.commands.download import DownloadCommand
@@ -20,7 +21,10 @@ from src.ytdlp.clips import YtdlpClips
 load_dotenv()
 
 owner = int(environ["OWNER_ID"])
-friends = SqliteFriends(Path(environ.get("DB_PATH", "courier.db")))
+engine = create_async_engine(
+    "sqlite+aiosqlite:///" + environ.get("DB_PATH", "courier.db")
+)
+friends = SqliteFriends(AsyncSession(engine))
 clips = YtdlpClips(
     Path(gettempdir()),
     {
