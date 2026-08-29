@@ -97,3 +97,29 @@ class BrokenTool:
 
     def extract_info(self, link: str) -> dict[str, Any]:
         raise Fault("There is no video behind the link.")
+
+
+class FakeRows:
+    def __init__(self, rows: list[tuple[str]]):
+        self.rows = rows
+
+    def all(self) -> list[tuple[str]]:
+        return self.rows
+
+
+class FakeSession:
+    def __init__(self):
+        self.names: set[str] = set()
+
+    async def execute(
+        self, statement: Any, parameters: dict[str, str] | None = None
+    ) -> FakeRows:
+        query = str(statement)
+        if query.startswith("INSERT"):
+            self.names.add(parameters["name"])
+        if query.startswith("DELETE"):
+            self.names.discard(parameters["name"])
+        return FakeRows([(name,) for name in sorted(self.names)])
+
+    async def commit(self) -> None:
+        pass

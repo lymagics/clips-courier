@@ -9,7 +9,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-COPY main.py ./
+COPY main.py alembic.ini ./
+COPY migrations ./migrations
 COPY src ./src
 
-CMD ["uv", "run", "--no-sync", "python", "main.py"]
+CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync python main.py"]
