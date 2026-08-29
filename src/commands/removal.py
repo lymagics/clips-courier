@@ -12,13 +12,13 @@ class RemovalCommand(Command):
 
     def router(self) -> Router:
         router = Router()
-        router.message.register(self.answer, filters.Command("r", "remove"))
+        router.message.register(self.answer, filters.Command("kf"))
         return router
 
     async def answer(self, message: Message):
         words = (message.text or "").split(maxsplit=1)
         if len(words) < 2 or not Handle(words[1]).valid():
-            await message.answer("Send the command with a username: /r @username")
+            await message.answer("Send the command with a username: /kf @username")
         else:
             await self._expel(message, Handle(words[1]).name())
 

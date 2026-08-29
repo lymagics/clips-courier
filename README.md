@@ -22,7 +22,7 @@ The bot is private by default: only the owner and the people the owner adds ("fr
 | `/d <link>` | Owner and friends | Download the video and send it to the chat |
 | `/f @username` | Owner only | Add a friend |
 | `/fl` | Owner only | Show the friend list |
-| `/r @username` | Owner only | Remove a friend |
+| `/kf @username` | Owner only | Remove a friend |
 
 ## Setup
 

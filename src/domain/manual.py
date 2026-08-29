@@ -10,7 +10,7 @@ class OwnerManual(Reply):
             f"{self.origin.text()}\n"
             "/f @username — add a friend\n"
             "/fl — show the friend list\n"
-            "/r @username — remove a friend"
+            "/kf @username — remove a friend"
         )
 
 

@@ -37,7 +37,7 @@ def test_hides_owner_commands():
     )
 
 
-@pytest.mark.parametrize("command", ["/f @username", "/fl", "/r @username"])
+@pytest.mark.parametrize("command", ["/f @username", "/fl", "/kf @username"])
 def test_lists_owner_command(command: str):
     assert_that(
         OwnerManual(Manual("Quasar")).text(),
