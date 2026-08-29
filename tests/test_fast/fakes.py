@@ -5,9 +5,11 @@ from aiogram.types import FSInputFile
 
 from src.domain.clip import Clip
 from src.domain.clips import Clips
+from src.domain.downloads import Downloads
 from src.domain.fault import Fault
 from src.domain.friend import Friend, StoredFriend
 from src.domain.friends import Friends
+from src.domain.stat import Stat, StoredStat
 
 
 class FakeUser:
@@ -63,6 +65,20 @@ class FakeFriends(Friends):
 
     async def roster(self) -> list[Friend]:
         return [StoredFriend(name) for name in self.names]
+
+
+class FakeDownloads(Downloads):
+    def __init__(self, stats: dict[str, tuple[int, int]]):
+        self.stats = stats
+
+    async def record(self, name: str, size: int) -> None:
+        count, total = self.stats.get(name, (0, 0))
+        self.stats[name] = (count + 1, total + size)
+
+    async def tally(self) -> list[Stat]:
+        return [
+            StoredStat(name, count, size) for name, (count, size) in self.stats.items()
+        ]
 
 
 class FakeHandler:
