@@ -12,6 +12,7 @@ from src.commands.friend import FriendCommand
 from src.commands.friends import FriendsCommand
 from src.commands.help import HelpCommand
 from src.commands.owned import OwnedCommand
+from src.commands.post import PostCommand
 from src.commands.removal import RemovalCommand
 from src.commands.start import StartCommand
 from src.commands.stats import StatsCommand
@@ -44,6 +45,7 @@ dispatcher = Bot(
     StartCommand(environ.get("BOT_NAME", "")),
     HelpCommand(environ.get("BOT_NAME", ""), owner),
     TrustedCommand(DownloadCommand(clips, downloads), owner, friends),
+    TrustedCommand(PostCommand(clips, downloads), owner, friends),
     OwnedCommand(FriendCommand(friends), owner),
     OwnedCommand(FriendsCommand(friends), owner),
     OwnedCommand(RemovalCommand(friends), owner),

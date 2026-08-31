@@ -4,7 +4,7 @@ from hamcrest import assert_that, contains_string, not_
 from src.domain.manual import Manual, OwnerManual
 
 
-@pytest.mark.parametrize("command", ["/s", "/h", "/d"])
+@pytest.mark.parametrize("command", ["/s", "/h", "/d <link>", "/dm <link>"])
 def test_lists_available_command(command: str):
     assert_that(
         Manual("Vortex").text(),

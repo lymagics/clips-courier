@@ -26,5 +26,6 @@ class Manual(Reply):
                 "/s — show the welcome message",
                 "/h — show this help",
                 "/d <link> — download the video and send it here",
+                "/dm <link> — download the video and send it here with metadata",
             )
         )
