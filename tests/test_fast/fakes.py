@@ -9,6 +9,7 @@ from src.domain.downloads import Downloads
 from src.domain.fault import Fault
 from src.domain.friend import Friend, StoredFriend
 from src.domain.friends import Friends
+from src.domain.post import Post, StoredPost
 from src.domain.stat import Stat, StoredStat
 
 
@@ -24,24 +25,33 @@ class FakeMessage:
         self.from_user = sender
         self.replies: list[str] = []
         self.videos: list[FSInputFile] = []
+        self.captions: list[str] = []
 
     async def answer(self, text: str):
         self.replies.append(text)
 
-    async def answer_video(self, video: FSInputFile):
+    async def answer_video(self, video: FSInputFile, caption: str = ""):
         self.videos.append(video)
+        self.captions.append(caption)
 
 
 class FakeClip(Clip):
-    def __init__(self, file: Path):
+    def __init__(self, file: Path, caption: str = ""):
         self.origin = file
+        self.note = caption
 
     async def file(self) -> Path:
         return self.origin
 
+    async def post(self) -> Post:
+        return StoredPost(self.origin, self.note)
+
 
 class BrokenClip(Clip):
     async def file(self) -> Path:
+        raise Fault("The clip is broken.")
+
+    async def post(self) -> Post:
         raise Fault("The clip is broken.")
 
 
@@ -102,6 +112,22 @@ class FakeTool:
     def extract_info(self, link: str) -> dict[str, Any]:
         self.file.write_bytes(b"\x00\x00\x00\x18ftypmp42-fake")
         return {"requested_downloads": [{"filepath": str(self.file)}]}
+
+
+class MetaTool:
+    def __init__(self, file: Path, info: dict[str, Any]):
+        self.file = file
+        self.info = info
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *trash: object) -> bool:
+        return False
+
+    def extract_info(self, link: str) -> dict[str, Any]:
+        self.file.write_bytes(b"\x00\x00\x00\x14ftypisom-meta")
+        return {"requested_downloads": [{"filepath": str(self.file)}], **self.info}
 
 
 class BrokenTool:
