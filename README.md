@@ -77,8 +77,6 @@ make flake8   # lint with flake8
 make ruff     # lint with ruff
 ```
 
-The design is described in [specs/high-level-design.md](specs/high-level-design.md).
-
 ## License
 
 [MIT](LICENSE)
