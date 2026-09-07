@@ -1,6 +1,7 @@
 # Clips Courier
 
 [![EO principles respected here](https://www.elegantobjects.org/badge.svg)](https://www.elegantobjects.org)
+[![Docker Pulls](https://img.shields.io/docker/pulls/lymagics/clips-courier)](https://hub.docker.com/r/lymagics/clips-courier)
 
 A private Telegram bot that delivers short videos into the chat. Send it a link to a TikTok, Instagram Reels, or X videos — it downloads the clip with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and sends it back as a regular Telegram video.
 
