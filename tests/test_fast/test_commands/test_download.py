@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 from aiogram import Router
+from aiogram.types import FSInputFile
 from hamcrest import (
     assert_that,
     contains_string,
@@ -65,6 +66,56 @@ async def test_answers_downloading_status_before_video():
         message.replies[0],
         contains_string("Downloading"),
         "The download command must answer with a status before the video",
+    )
+
+
+async def test_replies_to_command_with_downloading_status():
+    folder = Path("tmp/test-download-quoted-status")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-1204.mp4"
+    file.write_bytes(b"\x1b\x1cvideo-1204")
+    message = FakeMessage("/d https://example.test/v/1204")
+    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(contains_string("Downloading")),
+        "The download command must reply to the command with the status",
+    )
+
+
+async def test_replies_to_command_with_video():
+    folder = Path("tmp/test-download-quoted-video")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-6318.mp4"
+    file.write_bytes(b"\x2c\x2dvideo-6318")
+    message = FakeMessage("/d https://example.test/v/6318")
+    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(instance_of(FSInputFile)),
+        "The download command must reply to the command with the video",
+    )
+
+
+async def test_replies_to_command_with_failure():
+    message = FakeMessage("/d https://example.test/gone/4471")
+    await DownloadCommand(FakeClips(BrokenClip()), FakeDownloads({})).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(contains_string("cannot download")),
+        "The download command must reply to the command with the failure",
+    )
+
+
+async def test_replies_to_command_with_usage_hint():
+    message = FakeMessage("/d ")
+    await DownloadCommand(FakeClips(BrokenClip()), FakeDownloads({})).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(contains_string("/d <link>")),
+        "The download command must reply to the command with the usage hint",
     )
 
 

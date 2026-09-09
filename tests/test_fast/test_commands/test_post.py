@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 from aiogram import Router
+from aiogram.types import FSInputFile
 from hamcrest import (
     assert_that,
     contains_string,
@@ -72,6 +73,62 @@ async def test_removes_file_after_delivery():
         file.exists(),
         is_(False),
         "The post command must remove the temporary file after delivery",
+    )
+
+
+async def test_replies_to_command_with_downloading_status():
+    folder = Path("tmp/test-post-quoted-status")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-2719.mp4"
+    file.write_bytes(b"\x31\x32video-2719")
+    message = FakeMessage("/dm https://example.test/v/2719")
+    await PostCommand(
+        FakeClips(FakeClip(file, "Foggy harbor ⚓\n\n— @tide_watch · Instagram")),
+        FakeDownloads({}),
+    ).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(contains_string("Downloading")),
+        "The post command must reply to the command with the status",
+    )
+
+
+async def test_replies_to_command_with_video():
+    folder = Path("tmp/test-post-quoted-video")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-8046.mp4"
+    file.write_bytes(b"\x41\x42video-8046")
+    message = FakeMessage("/dm https://example.test/v/8046")
+    await PostCommand(
+        FakeClips(FakeClip(file, "Night market 🏮\n\n— @lantern_lane · TikTok")),
+        FakeDownloads({}),
+    ).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(instance_of(FSInputFile)),
+        "The post command must reply to the command with the video",
+    )
+
+
+async def test_replies_to_command_with_failure():
+    message = FakeMessage("/dm https://example.test/gone/5533")
+    await PostCommand(FakeClips(BrokenClip()), FakeDownloads({})).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(contains_string("cannot download")),
+        "The post command must reply to the command with the failure",
+    )
+
+
+async def test_replies_to_command_with_usage_hint():
+    message = FakeMessage("/dm ")
+    await PostCommand(FakeClips(BrokenClip()), FakeDownloads({})).answer(message)
+    assert_that(
+        message.quoted,
+        has_item(contains_string("/dm <link>")),
+        "The post command must reply to the command with the usage hint",
     )
 
 
