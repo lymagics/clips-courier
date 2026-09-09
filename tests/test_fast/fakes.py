@@ -26,6 +26,7 @@ class FakeMessage:
         self.replies: list[str] = []
         self.videos: list[FSInputFile] = []
         self.captions: list[str] = []
+        self.quoted: list[str | FSInputFile] = []
 
     async def answer(self, text: str):
         self.replies.append(text)
@@ -33,6 +34,15 @@ class FakeMessage:
     async def answer_video(self, video: FSInputFile, caption: str = ""):
         self.videos.append(video)
         self.captions.append(caption)
+
+    async def reply(self, text: str):
+        self.replies.append(text)
+        self.quoted.append(text)
+
+    async def reply_video(self, video: FSInputFile, caption: str = ""):
+        self.videos.append(video)
+        self.captions.append(caption)
+        self.quoted.append(video)
 
 
 class FakeClip(Clip):

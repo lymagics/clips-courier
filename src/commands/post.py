@@ -22,17 +22,17 @@ class PostCommand(Command):
     async def answer(self, message: Message):
         words = (message.text or "").split(maxsplit=1)
         if len(words) < 2:
-            await message.answer("Send the command with a link: /dm <link>")
+            await message.reply("Send the command with a link: /dm <link>")
         else:
             await self._deliver(message, words[1])
 
     async def _deliver(self, message: Message, link: str):
-        await message.answer("Downloading…")
+        await message.reply("Downloading…")
         try:
             post = await self.clips.clip(link).post()
         except Exception:
             logging.getLogger(__name__).exception("Download failed: %s", link)
-            await message.answer("Sorry, I cannot download this link.")
+            await message.reply("Sorry, I cannot download this link.")
         else:
             await self._send(message, post)
 
@@ -40,7 +40,7 @@ class PostCommand(Command):
         file = post.file()
         try:
             size = file.stat().st_size
-            await message.answer_video(FSInputFile(file), caption=post.caption())
+            await message.reply_video(FSInputFile(file), caption=post.caption())
             await self._count(message, size)
         finally:
             file.unlink()
