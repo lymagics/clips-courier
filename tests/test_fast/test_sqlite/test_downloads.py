@@ -4,7 +4,6 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-
 from hamcrest import assert_that, has_item, has_length, is_
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
