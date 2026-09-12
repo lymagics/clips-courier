@@ -12,7 +12,7 @@ The bot is private by default: only the owner and the people the owner adds ("fr
 1. You send `/d <link>` to the bot.
 2. The bot checks that you are the owner or a friend.
 3. It downloads the video to a temporary folder and sends it to the chat.
-4. The temporary file is deleted right after.
+4. The temporary folder is deleted right after, even when the download fails.
 
 ## Commands
 

@@ -6,6 +6,7 @@ from yt_dlp import YoutubeDL
 
 from src.domain.clip import Clip
 from src.domain.clips import Clips
+from src.domain.tidy import TidyClip
 from src.ytdlp.clip import YtdlpClip
 
 
@@ -15,6 +16,7 @@ class YtdlpClips(Clips):
         self.options = options
 
     def clip(self, link: str) -> Clip:
+        folder = self.folder / uuid4().hex
         options = dict(self.options)
-        options["outtmpl"] = str(self.folder / uuid4().hex / "%(id)s.%(ext)s")
-        return YtdlpClip(link, YoutubeDL(options))
+        options["outtmpl"] = str(folder / "%(id)s.%(ext)s")
+        return TidyClip(YtdlpClip(link, YoutubeDL(options)), folder)

@@ -54,6 +54,22 @@ async def test_removes_file_after_delivery():
     )
 
 
+async def test_removes_folder_after_delivery():
+    folder = Path("tmp/test-download-folder-cleanup")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-3047.mp4"
+    file.write_bytes(b"\x30\x47video-3047")
+    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(
+        FakeMessage("/d https://example.test/v/3047")
+    )
+    assert_that(
+        folder.exists(),
+        is_(False),
+        "The download command must remove the temporary folder after delivery",
+    )
+
+
 async def test_answers_downloading_status_before_video():
     folder = Path("tmp/test-download-status")
     shutil.rmtree(folder, ignore_errors=True)
