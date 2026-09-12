@@ -1,4 +1,5 @@
 import logging
+import shutil
 
 from aiogram import Router, filters
 from aiogram.types import FSInputFile, Message
@@ -38,7 +39,7 @@ class DownloadCommand(Command):
                 await message.reply_video(FSInputFile(file))
                 await self._count(message, size)
             finally:
-                file.unlink()
+                shutil.rmtree(file.parent)
 
     async def _count(self, message: Message, size: int) -> None:
         user = message.from_user

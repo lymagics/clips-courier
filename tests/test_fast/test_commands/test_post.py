@@ -76,6 +76,23 @@ async def test_removes_file_after_delivery():
     )
 
 
+async def test_removes_folder_after_delivery():
+    folder = Path("tmp/test-post-folder-cleanup")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-5162.mp4"
+    file.write_bytes(b"\x51\x62video-5162")
+    await PostCommand(
+        FakeClips(FakeClip(file, "Ice climbing 🧗\n\n— @frost_grip · X")),
+        FakeDownloads({}),
+    ).answer(FakeMessage("/dm https://example.test/v/5162"))
+    assert_that(
+        folder.exists(),
+        is_(False),
+        "The post command must remove the temporary folder after delivery",
+    )
+
+
 async def test_replies_to_command_with_downloading_status():
     folder = Path("tmp/test-post-quoted-status")
     shutil.rmtree(folder, ignore_errors=True)
