@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+import pytest
 from hamcrest import assert_that, has_item, has_length, is_
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
@@ -161,4 +162,23 @@ async def test_records_downloads_from_concurrent_tasks():
         [stat.count() for stat in await downloads.tally()],
         has_item(5),
         "The sqlite downloads must record downloads from concurrent tasks",
+    )
+
+
+@pytest.mark.skip(reason="Reproduces #37, unskip once fixed")
+async def test_merges_downloads_of_one_user_across_username_casing():
+    folder = Path("tmp/test-downloads-casing")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    await MigratedSchema(folder / "case.db").upgrade()
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{folder}/case.db", poolclass=NullPool
+    )
+    downloads = SqliteDownloads(engine)
+    await downloads.record("MossyLynx_7", 512)
+    await downloads.record("mossylynx_7", 4096)
+    assert_that(
+        await downloads.tally(),
+        has_length(1),
+        "The sqlite downloads must merge one user's downloads across username casing",
     )
