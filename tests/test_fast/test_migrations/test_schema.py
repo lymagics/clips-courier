@@ -3,7 +3,7 @@ import sqlite3
 from pathlib import Path
 
 from hamcrest import assert_that, has_item, has_length
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.sqlite.friends import SqliteFriends
@@ -19,7 +19,7 @@ async def test_builds_friends_table_in_fresh_database():
         f"sqlite+aiosqlite:///{folder}/courier.db", poolclass=NullPool
     )
     assert_that(
-        await SqliteFriends(AsyncSession(engine)).roster(),
+        await SqliteFriends(engine).roster(),
         has_length(0),
         "The migrated schema must build a friends table in a fresh database",
     )
@@ -35,7 +35,7 @@ async def test_survives_repeated_upgrade():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/wire.db", poolclass=NullPool
     )
-    friends = SqliteFriends(AsyncSession(engine))
+    friends = SqliteFriends(engine)
     await friends.add("velvet_owl")
     assert_that(
         [friend.name() for friend in await friends.roster()],
@@ -58,10 +58,7 @@ async def test_adopts_database_born_before_migrations():
         f"sqlite+aiosqlite:///{folder}/legacy.db", poolclass=NullPool
     )
     assert_that(
-        [
-            friend.name()
-            for friend in await SqliteFriends(AsyncSession(engine)).roster()
-        ],
+        [friend.name() for friend in await SqliteFriends(engine).roster()],
         has_item("rusty_finch"),
         "The migrated schema must adopt a database born before migrations",
     )

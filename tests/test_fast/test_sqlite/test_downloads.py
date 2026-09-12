@@ -1,9 +1,10 @@
+import asyncio
 import shutil
 import sqlite3
 from pathlib import Path
 
 from hamcrest import assert_that, has_item, has_length, is_
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.sqlite.downloads import SqliteDownloads
@@ -18,7 +19,7 @@ async def test_lists_recorded_download():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/courier.db", poolclass=NullPool
     )
-    downloads = SqliteDownloads(AsyncSession(engine))
+    downloads = SqliteDownloads(engine)
     await downloads.record("amber_heron", 2048)
     assert_that(
         [stat.name() for stat in await downloads.tally()],
@@ -35,7 +36,7 @@ async def test_counts_repeated_downloads_of_one_user():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/wire.db", poolclass=NullPool
     )
-    downloads = SqliteDownloads(AsyncSession(engine))
+    downloads = SqliteDownloads(engine)
     await downloads.record("teal_badger", 100)
     await downloads.record("teal_badger", 300)
     await downloads.record("teal_badger", 555)
@@ -54,7 +55,7 @@ async def test_sums_data_size_per_user():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/sum.db", poolclass=NullPool
     )
-    downloads = SqliteDownloads(AsyncSession(engine))
+    downloads = SqliteDownloads(engine)
     await downloads.record("olive_stoat", 4001)
     await downloads.record("olive_stoat", 999)
     assert_that(
@@ -73,7 +74,7 @@ async def test_builds_empty_tally_from_fresh_database():
         f"sqlite+aiosqlite:///{folder}/blank.db", poolclass=NullPool
     )
     assert_that(
-        await SqliteDownloads(AsyncSession(engine)).tally(),
+        await SqliteDownloads(engine).tally(),
         has_length(0),
         "The sqlite downloads must build an empty tally from a fresh database",
     )
@@ -87,13 +88,13 @@ async def test_keeps_tally_for_new_session_over_same_file():
     first = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/keep.db", poolclass=NullPool
     )
-    await SqliteDownloads(AsyncSession(first)).record("dusty_falcon", 7331)
+    await SqliteDownloads(first).record("dusty_falcon", 7331)
     await first.dispose()
     second = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/keep.db", poolclass=NullPool
     )
     assert_that(
-        [stat.size() for stat in await SqliteDownloads(AsyncSession(second)).tally()],
+        [stat.size() for stat in await SqliteDownloads(second).tally()],
         has_item(7331),
         "The sqlite downloads must keep the tally for a new session over one file",
     )
@@ -107,7 +108,7 @@ async def test_stores_separate_row_for_every_download():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/rows.db", poolclass=NullPool
     )
-    downloads = SqliteDownloads(AsyncSession(engine))
+    downloads = SqliteDownloads(engine)
     await downloads.record("gilded_heron", 640)
     await downloads.record("gilded_heron", 1919)
     await engine.dispose()
@@ -129,7 +130,7 @@ async def test_orders_tally_by_download_count_descending():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/rank.db", poolclass=NullPool
     )
-    downloads = SqliteDownloads(AsyncSession(engine))
+    downloads = SqliteDownloads(engine)
     await downloads.record("shy_viper", 11)
     await downloads.record("bold_otter", 22)
     await downloads.record("bold_otter", 33)
@@ -137,4 +138,27 @@ async def test_orders_tally_by_download_count_descending():
         (await downloads.tally())[0].name(),
         is_("bold_otter"),
         "The sqlite downloads must order the tally by download count, descending",
+    )
+
+
+async def test_records_downloads_from_concurrent_tasks():
+    folder = Path("tmp/test-downloads-concurrent")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    await MigratedSchema(folder / "race.db").upgrade()
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{folder}/race.db", poolclass=NullPool
+    )
+    downloads = SqliteDownloads(engine)
+    await asyncio.gather(
+        downloads.record("hasty_mole", 13),
+        downloads.record("hasty_mole", 17),
+        downloads.record("hasty_mole", 19),
+        downloads.record("hasty_mole", 23),
+        downloads.record("hasty_mole", 29),
+    )
+    assert_that(
+        [stat.count() for stat in await downloads.tally()],
+        has_item(5),
+        "The sqlite downloads must record downloads from concurrent tasks",
     )
