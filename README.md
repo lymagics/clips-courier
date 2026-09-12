@@ -78,6 +78,20 @@ make flake8   # lint with flake8
 make ruff     # lint with ruff
 ```
 
+## How to Report Issues
+
+### Enhancements
+
+Open a GitHub issue and label it `enhancement`. Describe the desired behaviour and why it is useful. No code is required.
+
+### Bugs in Code
+
+Open a pull request, not an issue. The PR must contain a test that reproduces the bug and fails against the current code. Mark the test as disabled with `pytest.mark.skip` and a short reason, so CI stays green while the failing case is on record. The fix (if any) can arrive in the same or a follow-up PR, which removes the skip. Contributors without push rights fork the repository first.
+
+### Bugs Outside Code
+
+If the bug cannot be reproduced with a test (documentation, packaging, CI configuration, Docker setup, and so on), open a GitHub issue and label it `bug`. Describe the expected and actual behaviour and how to observe it.
+
 ## License
 
 [MIT](LICENSE)
