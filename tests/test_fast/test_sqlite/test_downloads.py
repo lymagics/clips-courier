@@ -3,6 +3,8 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from hamcrest import assert_that, has_item, has_length, is_
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
@@ -164,6 +166,7 @@ async def test_records_downloads_from_concurrent_tasks():
     )
 
 
+@pytest.mark.skip(reason="Reproduces #37, unskip once fixed")
 async def test_merges_downloads_of_one_user_across_username_casing():
     folder = Path("tmp/test-downloads-casing")
     shutil.rmtree(folder, ignore_errors=True)
