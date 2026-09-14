@@ -52,7 +52,8 @@ def test_keeps_single_at_sign_for_prefixed_account():
     )
 
 
-# TODO: Bug: caption can exceed the telegram caption cap, see https://github.com/lymagics/clips-courier/pull/44
+# TODO: Bug: caption can exceed the telegram caption cap,
+# see https://github.com/lymagics/clips-courier/pull/44
 @pytest.mark.skip(
     reason="Bug: caption can exceed the telegram caption cap, "
     "see https://github.com/lymagics/clips-courier/pull/44"
