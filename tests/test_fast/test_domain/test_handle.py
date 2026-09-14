@@ -27,3 +27,12 @@ def test_invalid_for_malformed_text(text: str):
         is_(False),
         f"The handle must be invalid for the malformed text {text!r}",
     )
+
+
+def test_invalid_for_username_starting_with_a_digit():
+    assert_that(
+        Handle("77_wombat").valid(),
+        is_(False),
+        "The handle must be invalid for a username starting with a digit, "
+        "since telegram usernames must start with a letter",
+    )
