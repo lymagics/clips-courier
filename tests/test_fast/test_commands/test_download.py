@@ -23,6 +23,11 @@ from tests.test_fast.fakes import (
 )
 
 
+class RejectingMessage(FakeMessage):
+    async def reply_video(self, video: FSInputFile, caption: str = ""):
+        raise RuntimeError("Telegram rejected the video as too large.")
+
+
 async def test_sends_video_from_link():
     folder = Path("tmp/test-download-send")
     shutil.rmtree(folder, ignore_errors=True)
@@ -122,6 +127,21 @@ async def test_replies_to_command_with_failure():
         message.quoted,
         has_item(contains_string("cannot download")),
         "The download command must reply to the command with the failure",
+    )
+
+
+async def test_reports_failure_when_telegram_rejects_the_video():
+    folder = Path("tmp/test-download-rejected")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-9911.mp4"
+    file.write_bytes(b"\x99\x11" * 41)
+    message = RejectingMessage("/d https://example.test/v/9911")
+    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    assert_that(
+        message.replies,
+        has_item(contains_string("cannot download")),
+        "The download command must report a failure when telegram rejects the video",
     )
 
 
