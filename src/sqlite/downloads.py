@@ -13,7 +13,7 @@ class SqliteDownloads(Downloads):
         async with AsyncSession(self.engine) as db:
             await db.execute(
                 text("INSERT INTO downloads (name, size) VALUES (:name, :size)"),
-                {"name": name, "size": size},
+                {"name": name.lower(), "size": size},
             )
             await db.commit()
 
@@ -21,8 +21,8 @@ class SqliteDownloads(Downloads):
         async with AsyncSession(self.engine) as db:
             rows = await db.execute(
                 text(
-                    "SELECT name, COUNT(*), SUM(size) FROM downloads "
-                    "GROUP BY name ORDER BY COUNT(*) DESC, name"
+                    "SELECT LOWER(name), COUNT(*), SUM(size) FROM downloads "
+                    "GROUP BY LOWER(name) ORDER BY COUNT(*) DESC, LOWER(name)"
                 )
             )
             return [StoredStat(row[0], row[1], row[2]) for row in rows.all()]
