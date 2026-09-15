@@ -9,4 +9,4 @@ class Handle:
         return self.src.strip().removeprefix("@").lower()
 
     def valid(self) -> bool:
-        return re.fullmatch(r"[a-z0-9_]{5,32}", self.name()) is not None
+        return re.fullmatch(r"[a-z][a-z0-9_]{4,31}", self.name()) is not None
