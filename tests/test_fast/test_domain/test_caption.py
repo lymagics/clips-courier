@@ -1,4 +1,5 @@
-from hamcrest import assert_that, ends_with, equal_to, is_
+import pytest
+from hamcrest import assert_that, ends_with, equal_to, is_, less_than_or_equal_to
 
 from src.domain.caption import Caption
 
@@ -48,6 +49,20 @@ def test_keeps_single_at_sign_for_prefixed_account():
         Caption("Bloopers #7", "@double_at", "TikTok").text(),
         equal_to("Bloopers #7\n\n— @double_at · TikTok"),
         "The caption must keep a single at sign for a prefixed account",
+    )
+
+
+# TODO: Bug: caption can exceed the telegram caption cap,
+# see https://github.com/lymagics/clips-courier/pull/44
+@pytest.mark.skip(
+    reason="Bug: caption can exceed the telegram caption cap, "
+    "see https://github.com/lymagics/clips-courier/pull/44"
+)
+def test_keeps_whole_text_within_the_telegram_caption_cap():
+    assert_that(
+        len(Caption("", "s" * 1400, "TikTok").text()),
+        less_than_or_equal_to(1024),
+        "The caption must keep its whole text within the telegram caption cap",
     )
 
 

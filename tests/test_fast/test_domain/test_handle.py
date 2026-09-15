@@ -27,3 +27,18 @@ def test_invalid_for_malformed_text(text: str):
         is_(False),
         f"The handle must be invalid for the malformed text {text!r}",
     )
+
+
+# TODO: Bug: handle accepts a digit-led username,
+# see https://github.com/lymagics/clips-courier/pull/45
+@pytest.mark.skip(
+    reason="Bug: handle accepts a digit-led username, "
+    "see https://github.com/lymagics/clips-courier/pull/45"
+)
+def test_invalid_for_username_starting_with_a_digit():
+    assert_that(
+        Handle("77_wombat").valid(),
+        is_(False),
+        "The handle must be invalid for a username starting with a digit, "
+        "since telegram usernames must start with a letter",
+    )
