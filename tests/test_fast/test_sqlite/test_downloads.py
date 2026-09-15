@@ -3,7 +3,6 @@ import shutil
 import sqlite3
 from pathlib import Path
 
-import pytest
 from hamcrest import assert_that, has_item, has_length, is_
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
@@ -165,7 +164,6 @@ async def test_records_downloads_from_concurrent_tasks():
     )
 
 
-@pytest.mark.skip(reason="Reproduces #37, unskip once fixed")
 async def test_merges_downloads_of_one_user_across_username_casing():
     folder = Path("tmp/test-downloads-casing")
     shutil.rmtree(folder, ignore_errors=True)
@@ -181,4 +179,26 @@ async def test_merges_downloads_of_one_user_across_username_casing():
         await downloads.tally(),
         has_length(1),
         "The sqlite downloads must merge one user's downloads across username casing",
+    )
+
+
+async def test_folds_rows_stored_earlier_in_mixed_casing():
+    folder = Path("tmp/test-downloads-legacy")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    await MigratedSchema(folder / "old.db").upgrade()
+    ledger = sqlite3.connect(folder / "old.db")
+    ledger.executemany(
+        "INSERT INTO downloads (name, size) VALUES (?, ?)",
+        [("Ashen_Kestrel", 70), ("ASHEN_kestrel", 700), ("ashen_kestrel", 7000)],
+    )
+    ledger.commit()
+    ledger.close()
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{folder}/old.db", poolclass=NullPool
+    )
+    assert_that(
+        [stat.size() for stat in await SqliteDownloads(engine).tally()],
+        is_([7770]),
+        "The sqlite downloads must fold rows stored earlier in mixed casing",
     )
