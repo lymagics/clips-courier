@@ -1,5 +1,6 @@
 import logging
 import shutil
+from pathlib import Path
 
 from aiogram import Router, filters
 from aiogram.types import FSInputFile, Message
@@ -29,17 +30,18 @@ class DownloadCommand(Command):
     async def _deliver(self, message: Message, link: str):
         await message.reply("Downloading…")
         try:
-            file = await self.clips.clip(link).file()
+            await self._send(message, await self.clips.clip(link).file())
         except Exception:
             logging.getLogger(__name__).exception("Download failed: %s", link)
             await message.reply("Sorry, I cannot download this link.")
-        else:
-            try:
-                size = file.stat().st_size
-                await message.reply_video(FSInputFile(file))
-                await self._count(message, size)
-            finally:
-                shutil.rmtree(file.parent)
+
+    async def _send(self, message: Message, file: Path):
+        try:
+            size = file.stat().st_size
+            await message.reply_video(FSInputFile(file))
+            await self._count(message, size)
+        finally:
+            shutil.rmtree(file.parent)
 
     async def _count(self, message: Message, size: int) -> None:
         user = message.from_user

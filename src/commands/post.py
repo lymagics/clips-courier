@@ -30,12 +30,10 @@ class PostCommand(Command):
     async def _deliver(self, message: Message, link: str):
         await message.reply("Downloading…")
         try:
-            post = await self.clips.clip(link).post()
+            await self._send(message, await self.clips.clip(link).post())
         except Exception:
             logging.getLogger(__name__).exception("Download failed: %s", link)
             await message.reply("Sorry, I cannot download this link.")
-        else:
-            await self._send(message, post)
 
     async def _send(self, message: Message, post: Post):
         file = post.file()
