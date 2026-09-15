@@ -66,6 +66,7 @@ Requires Python 3.12+ and [uv](https://github.com/astral-sh/uv).
 ```sh
 uv sync
 cp .env.example .env   # fill in BOT_KEY and OWNER_ID
+make migrate           # create the database tables
 make bot
 ```
 
