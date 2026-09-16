@@ -8,13 +8,18 @@ class Caption(Reply):
         self.platform = platform
 
     def text(self) -> str:
-        footer = self._clipped(self._footer(), 1024)
-        body = self._clipped(self.description.strip(), 1022 - len(footer))
+        footer = self._footer()
+        room = max(0, 1022 - len(footer))
+        body = self._body(room)
         return f"{body}\n\n{footer}" if body else footer
 
     def _footer(self) -> str:
         name = self.account.strip().removeprefix("@")
-        return f"— @{name} · {self.platform}" if name else f"— {self.platform}"
+        if name:
+            overhead = len("— @") + len(f" · {self.platform}")
+            name = name[: max(0, 1022 - overhead)]
+            return f"— @{name} · {self.platform}"
+        return f"— {self.platform}"
 
     def _clipped(self, text: str, room: int) -> str:
         return (

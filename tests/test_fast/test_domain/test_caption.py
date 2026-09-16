@@ -51,6 +51,8 @@ def test_keeps_single_at_sign_for_prefixed_account():
     )
 
 
+# TODO: Bug: caption can exceed the telegram caption cap,
+# see https://github.com/lymagics/clips-courier/pull/44
 def test_keeps_whole_text_within_the_telegram_caption_cap():
     assert_that(
         len(Caption("", "s" * 1400, "TikTok").text()),
