@@ -8,9 +8,9 @@ class OwnerManual(Reply):
     def text(self) -> str:
         return (
             f"{self.origin.text()}\n"
-            "/f @username — add a friend\n"
+            "/f — create an invitation link for a new friend\n"
             "/fl — show the friend list\n"
-            "/kf @username — remove a friend\n"
+            "/kf @username or id — remove a friend\n"
             "/st — show download statistics"
         )
 

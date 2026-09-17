@@ -9,6 +9,7 @@ from src.domain.downloads import Downloads
 from src.domain.fault import Fault
 from src.domain.friend import Friend, StoredFriend
 from src.domain.friends import Friends
+from src.domain.invites import Invites
 from src.domain.post import Post, StoredPost
 from src.domain.stat import Stat, StoredStat
 
@@ -19,10 +20,24 @@ class FakeUser:
         self.username = username
 
 
+class FakeBot:
+    def __init__(self, username: str):
+        self.username = username
+
+    async def me(self) -> FakeUser:
+        return FakeUser(1, self.username)
+
+
 class FakeMessage:
-    def __init__(self, text: str = "", sender: FakeUser | None = None):
+    def __init__(
+        self,
+        text: str = "",
+        sender: FakeUser | None = None,
+        bot: FakeBot | None = None,
+    ):
         self.text = text
         self.from_user = sender
+        self.bot = FakeBot("fake_bot") if bot is None else bot
         self.replies: list[str] = []
         self.videos: list[FSInputFile] = []
         self.captions: list[str] = []
@@ -74,17 +89,31 @@ class FakeClips(Clips):
 
 
 class FakeFriends(Friends):
-    def __init__(self, names: list[str]):
-        self.names = names
+    def __init__(self, members: dict[int, str]):
+        self.members = members
 
-    async def add(self, name: str) -> None:
-        self.names.append(name)
+    async def add(self, id: int, name: str) -> None:
+        self.members[id] = name
 
-    async def remove(self, name: str) -> None:
-        self.names.remove(name)
+    async def remove(self, id: int) -> None:
+        del self.members[id]
 
     async def roster(self) -> list[Friend]:
-        return [StoredFriend(name) for name in self.names]
+        return [StoredFriend(id, name) for id, name in self.members.items()]
+
+
+class FakeInvites(Invites):
+    def __init__(self, deadlines: dict[str, int]):
+        self.deadlines = deadlines
+
+    async def add(self, token: str, deadline: int) -> None:
+        self.deadlines[token] = deadline
+
+    async def remove(self, token: str) -> None:
+        del self.deadlines[token]
+
+    async def valid(self, token: str, now: int) -> bool:
+        return self.deadlines.get(token, now) > now
 
 
 class FakeDownloads(Downloads):

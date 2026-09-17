@@ -5,7 +5,7 @@
 
 A private Telegram bot that delivers short videos into the chat. Send it a link to a TikTok, Instagram Reels, or X videos — it downloads the clip with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and sends it back as a regular Telegram video.
 
-The bot is private by default: only the owner and the people the owner adds ("friends") can download videos.
+The bot is private by default: only the owner and the people the owner invites ("friends") can download videos.
 
 ## How It Works
 
@@ -13,6 +13,8 @@ The bot is private by default: only the owner and the people the owner adds ("fr
 2. The bot checks that you are the owner or a friend.
 3. It downloads the video to a temporary folder and sends it to the chat.
 4. The temporary folder is deleted right after, even when the download fails.
+
+Friends are recognised by their Telegram user id, not by username, so a friend keeps access after renaming and nobody can inherit it by taking over an old username. To add a friend, the owner sends `/f` and forwards the invitation link to the friend. The link works once and expires after 24 hours. Opening it adds the person to the friend list.
 
 ## Commands
 
@@ -22,9 +24,9 @@ The bot is private by default: only the owner and the people the owner adds ("fr
 | `/h` | Everyone | Show help |
 | `/d <link>` | Owner and friends | Download the video and send it to the chat |
 | `/dm <link>` | Owner and friends | Same as `/d`, plus a caption with the description, author, and platform |
-| `/f @username` | Owner only | Add a friend |
-| `/fl` | Owner only | Show the friend list |
-| `/kf @username` | Owner only | Remove a friend |
+| `/f` | Owner only | Create a one-time invitation link that expires in 24 hours |
+| `/fl` | Owner only | Show the friend list with usernames and ids |
+| `/kf @username` or `/kf <id>` | Owner only | Remove a friend |
 
 ## Setup
 

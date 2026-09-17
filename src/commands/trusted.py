@@ -32,7 +32,5 @@ class TrustedCommand(Command):
 
     async def _trusted(self, event: Message) -> bool:
         user = event.from_user
-        names = [friend.name() for friend in await self.friends.roster()]
-        return user is not None and (
-            user.id == self.owner or (user.username or "").lower() in names
-        )
+        ids = [friend.id() for friend in await self.friends.roster()]
+        return user is not None and (user.id == self.owner or user.id in ids)
