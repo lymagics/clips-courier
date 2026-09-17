@@ -3,12 +3,12 @@ from hamcrest import assert_that, contains_string, has_length, instance_of
 
 from src.commands.friend import FriendCommand
 from src.commands.owned import OwnedCommand
-from tests.test_fast.fakes import FakeFriends, FakeHandler, FakeMessage, FakeUser
+from tests.test_fast.fakes import FakeHandler, FakeInvites, FakeMessage, FakeUser
 
 
 async def test_passes_owner_message_to_origin():
     handler = FakeHandler()
-    await OwnedCommand(FriendCommand(FakeFriends([])), 3020).guard(
+    await OwnedCommand(FriendCommand(FakeInvites({}), 24), 3020).guard(
         handler, FakeMessage("/f @dawn_crane", FakeUser(3020)), {}
     )
     assert_that(
@@ -20,7 +20,7 @@ async def test_passes_owner_message_to_origin():
 
 async def test_refuses_stranger_politely():
     message = FakeMessage("/fl", FakeUser(404404))
-    await OwnedCommand(FriendCommand(FakeFriends([])), 111).guard(
+    await OwnedCommand(FriendCommand(FakeInvites({}), 24), 111).guard(
         FakeHandler(), message, {}
     )
     assert_that(
@@ -32,7 +32,7 @@ async def test_refuses_stranger_politely():
 
 async def test_keeps_stranger_message_away_from_origin():
     handler = FakeHandler()
-    await OwnedCommand(FriendCommand(FakeFriends([])), 808).guard(
+    await OwnedCommand(FriendCommand(FakeInvites({}), 24), 808).guard(
         handler, FakeMessage("/f @gray_stork", FakeUser(23901)), {}
     )
     assert_that(
@@ -44,7 +44,7 @@ async def test_keeps_stranger_message_away_from_origin():
 
 def test_builds_aiogram_router():
     assert_that(
-        OwnedCommand(FriendCommand(FakeFriends([])), 5).router(),
+        OwnedCommand(FriendCommand(FakeInvites({}), 24), 5).router(),
         instance_of(Router),
         "The owned command must build an aiogram router",
     )

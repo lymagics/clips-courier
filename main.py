@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from src.bot import Bot
+from src.commands.admission import AdmissionCommand
 from src.commands.download import DownloadCommand
 from src.commands.friend import FriendCommand
 from src.commands.friends import FriendsCommand
@@ -19,6 +20,7 @@ from src.commands.stats import StatsCommand
 from src.commands.trusted import TrustedCommand
 from src.sqlite.downloads import SqliteDownloads
 from src.sqlite.friends import SqliteFriends
+from src.sqlite.invites import SqliteInvites
 from src.ytdlp.clips import YtdlpClips
 
 load_dotenv()
@@ -28,6 +30,7 @@ engine = create_async_engine(
     "sqlite+aiosqlite:///" + environ.get("DB_PATH", "courier.db")
 )
 friends = SqliteFriends(engine)
+invites = SqliteInvites(engine)
 downloads = SqliteDownloads(engine)
 clips = YtdlpClips(
     Path(gettempdir()),
@@ -42,11 +45,12 @@ clips = YtdlpClips(
 )
 
 dispatcher = Bot(
+    AdmissionCommand(invites, friends),
     StartCommand(environ.get("BOT_NAME", "")),
     HelpCommand(environ.get("BOT_NAME", ""), owner),
     TrustedCommand(DownloadCommand(clips, downloads), owner, friends),
     TrustedCommand(PostCommand(clips, downloads), owner, friends),
-    OwnedCommand(FriendCommand(friends), owner),
+    OwnedCommand(FriendCommand(invites, 24), owner),
     OwnedCommand(FriendsCommand(friends), owner),
     OwnedCommand(RemovalCommand(friends), owner),
     OwnedCommand(StatsCommand(downloads), owner),

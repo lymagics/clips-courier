@@ -10,7 +10,7 @@ from src.sqlite.friends import SqliteFriends
 from tests.test_fast.schema import MigratedSchema
 
 
-async def test_lists_added_friend():
+async def test_lists_added_friend_by_id():
     folder = Path("tmp/test-friends-add")
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
@@ -19,11 +19,11 @@ async def test_lists_added_friend():
         f"sqlite+aiosqlite:///{folder}/courier.db", poolclass=NullPool
     )
     friends = SqliteFriends(engine)
-    await friends.add("amber_lynx")
+    await friends.add(7042, "amber_lynx")
     assert_that(
-        [friend.name() for friend in await friends.roster()],
-        has_item("amber_lynx"),
-        "The sqlite friends must list an added friend",
+        [friend.id() for friend in await friends.roster()],
+        has_item(7042),
+        "The sqlite friends must list an added friend by id",
     )
 
 
@@ -36,12 +36,30 @@ async def test_keeps_single_record_for_repeated_add():
         f"sqlite+aiosqlite:///{folder}/twice.db", poolclass=NullPool
     )
     friends = SqliteFriends(engine)
-    await friends.add("iron_sparrow")
-    await friends.add("iron_sparrow")
+    await friends.add(9001, "iron_sparrow")
+    await friends.add(9001, "iron_sparrow")
     assert_that(
         await friends.roster(),
         has_length(1),
         "The sqlite friends must keep a single record for a repeated add",
+    )
+
+
+async def test_renews_username_of_readded_friend():
+    folder = Path("tmp/test-friends-rename")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    await MigratedSchema(folder / "renamed.db").upgrade()
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{folder}/renamed.db", poolclass=NullPool
+    )
+    friends = SqliteFriends(engine)
+    await friends.add(5150, "young_heron")
+    await friends.add(5150, "elder_heron")
+    assert_that(
+        [friend.name() for friend in await friends.roster()],
+        has_item("elder_heron"),
+        "The sqlite friends must renew the username of a re-added friend",
     )
 
 
@@ -54,8 +72,8 @@ async def test_forgets_removed_friend():
         f"sqlite+aiosqlite:///{folder}/gone.db", poolclass=NullPool
     )
     friends = SqliteFriends(engine)
-    await friends.add("brave_toad")
-    await friends.remove("brave_toad")
+    await friends.add(311, "brave_toad")
+    await friends.remove(311)
     assert_that(
         await friends.roster(),
         has_length(0),
@@ -88,10 +106,10 @@ async def test_adds_friends_from_concurrent_tasks():
     )
     friends = SqliteFriends(engine)
     await asyncio.gather(
-        friends.add("quick_ibis"),
-        friends.add("quiet_yak"),
-        friends.add("quirky_eel"),
-        friends.add("queasy_gnu"),
+        friends.add(101, "quick_ibis"),
+        friends.add(102, "quiet_yak"),
+        friends.add(103, "quirky_eel"),
+        friends.add(104, "queasy_gnu"),
     )
     assert_that(
         await friends.roster(),

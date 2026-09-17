@@ -2,11 +2,12 @@ import shutil
 import sqlite3
 from pathlib import Path
 
-from hamcrest import assert_that, has_item, has_length
+from hamcrest import assert_that, has_item, has_length, is_
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.sqlite.friends import SqliteFriends
+from src.sqlite.invites import SqliteInvites
 from tests.test_fast.schema import MigratedSchema
 
 
@@ -25,6 +26,21 @@ async def test_builds_friends_table_in_fresh_database():
     )
 
 
+async def test_builds_invites_table_in_fresh_database():
+    folder = Path("tmp/test-schema-invites")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    await MigratedSchema(folder / "tokens.db").upgrade()
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{folder}/tokens.db", poolclass=NullPool
+    )
+    assert_that(
+        await SqliteInvites(engine).valid("fresh-token", 1234567890),
+        is_(False),
+        "The migrated schema must build an invites table in a fresh database",
+    )
+
+
 async def test_survives_repeated_upgrade():
     folder = Path("tmp/test-schema-repeat")
     shutil.rmtree(folder, ignore_errors=True)
@@ -36,7 +52,7 @@ async def test_survives_repeated_upgrade():
         f"sqlite+aiosqlite:///{folder}/wire.db", poolclass=NullPool
     )
     friends = SqliteFriends(engine)
-    await friends.add("velvet_owl")
+    await friends.add(31337, "velvet_owl")
     assert_that(
         [friend.name() for friend in await friends.roster()],
         has_item("velvet_owl"),
@@ -44,7 +60,7 @@ async def test_survives_repeated_upgrade():
     )
 
 
-async def test_adopts_database_born_before_migrations():
+async def test_rebuilds_friends_table_born_before_migrations():
     folder = Path("tmp/test-schema-legacy")
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
@@ -57,8 +73,10 @@ async def test_adopts_database_born_before_migrations():
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{folder}/legacy.db", poolclass=NullPool
     )
+    friends = SqliteFriends(engine)
+    await friends.add(64001, "rusty_finch")
     assert_that(
-        [friend.name() for friend in await SqliteFriends(engine).roster()],
-        has_item("rusty_finch"),
-        "The migrated schema must adopt a database born before migrations",
+        [friend.id() for friend in await friends.roster()],
+        has_item(64001),
+        "The migrated schema must rebuild a friends table born before migrations",
     )
