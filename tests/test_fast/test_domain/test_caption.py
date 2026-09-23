@@ -1,4 +1,3 @@
-import pytest
 from hamcrest import assert_that, ends_with, equal_to, is_, less_than_or_equal_to
 
 from src.domain.caption import Caption
@@ -68,18 +67,6 @@ def test_trims_whitespace_around_description():
     )
 
 
-# TODO: Bug: Caption measures the telegram caption cap in python characters
-# instead of utf-16 code units, so a description full of astral emoji ends up
-# far over telegram's real 1024 limit.
-# See https://github.com/lymagics/clips-courier/pull/61
-@pytest.mark.skip(
-    reason=(
-        "Bug: Caption measures the telegram caption cap in python characters "
-        "instead of utf-16 code units, so a description full of astral emoji "
-        "ends up far over telegram's real 1024 limit. "
-        "See https://github.com/lymagics/clips-courier/pull/61"
-    )
-)
 def test_keeps_utf16_caption_length_within_telegram_cap():
     text = Caption("🎥" * 900, "wide_lens42", "Instagram").text()
     assert_that(
