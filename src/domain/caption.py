@@ -1,4 +1,5 @@
 from src.domain.reply import Reply
+from src.domain.utf16 import Utf16Text
 
 
 class Caption(Reply):
@@ -9,7 +10,10 @@ class Caption(Reply):
 
     def text(self) -> str:
         footer = self._clipped(self._footer(), 1024)
-        body = self._clipped(self.description.strip(), 1022 - len(footer))
+        body = self._clipped(
+            self.description.strip(),
+            1022 - Utf16Text(footer).units(),
+        )
         return f"{body}\n\n{footer}" if body else footer
 
     def _footer(self) -> str:
@@ -19,6 +23,6 @@ class Caption(Reply):
     def _clipped(self, text: str, room: int) -> str:
         return (
             text
-            if len(text) <= room
-            else text[: room - 1].rstrip() + "…" if room > 0 else ""
+            if Utf16Text(text).units() <= room
+            else Utf16Text(text).clipped(room - 1).rstrip() + "…" if room > 0 else ""
         )
