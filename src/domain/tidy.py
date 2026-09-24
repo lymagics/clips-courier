@@ -10,9 +10,6 @@ class TidyClip(Clip):
         self.origin = clip
         self.folder = folder
 
-    async def file(self) -> Path:
-        return (await self.post()).file()
-
     async def post(self) -> Post:
         try:
             return await self.origin.post()

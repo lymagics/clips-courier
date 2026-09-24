@@ -1,13 +1,14 @@
 import logging
 import shutil
-from pathlib import Path
 
 from aiogram import Router, filters
-from aiogram.types import FSInputFile, Message
+from aiogram.types import Message
 
 from src.commands.command import Command
 from src.domain.clips import Clips
 from src.domain.downloads import Downloads
+from src.domain.post import Post
+from src.telegram.parcel import Parcel
 
 
 class DownloadCommand(Command):
@@ -30,18 +31,20 @@ class DownloadCommand(Command):
     async def _deliver(self, message: Message, link: str):
         await message.reply("Downloading…")
         try:
-            await self._send(message, await self.clips.clip(link).file())
+            await self._send(message, await self.clips.clip(link).post())
         except Exception:
             logging.getLogger(__name__).exception("Download failed: %s", link)
             await message.reply("Sorry, I cannot download this link.")
 
-    async def _send(self, message: Message, file: Path):
+    async def _send(self, message: Message, post: Post):
+        files = post.files()
         try:
-            size = file.stat().st_size
-            await message.reply_video(FSInputFile(file))
+            size = sum(file.stat().st_size for file in files)
+            await Parcel(files, "").send(message)
             await self._count(message, size)
         finally:
-            shutil.rmtree(file.parent)
+            for folder in {file.parent for file in files}:
+                shutil.rmtree(folder)
 
     async def _count(self, message: Message, size: int) -> None:
         user = message.from_user

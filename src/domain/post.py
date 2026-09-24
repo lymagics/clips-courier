@@ -4,7 +4,7 @@ from pathlib import Path
 
 class Post(ABC):
     @abstractmethod
-    def file(self) -> Path:
+    def files(self) -> list[Path]:
         pass
 
     @abstractmethod
@@ -13,12 +13,12 @@ class Post(ABC):
 
 
 class StoredPost(Post):
-    def __init__(self, file: Path, caption: str):
-        self.path = file
+    def __init__(self, files: list[Path], caption: str):
+        self.paths = files
         self.note = caption
 
-    def file(self) -> Path:
-        return self.path
+    def files(self) -> list[Path]:
+        return list(self.paths)
 
     def caption(self) -> str:
         return self.note
