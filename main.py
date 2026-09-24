@@ -17,6 +17,9 @@ from src.commands.removal import RemovalCommand
 from src.commands.start import StartCommand
 from src.commands.stats import StatsCommand
 from src.commands.trusted import TrustedCommand
+from src.domain.fallbacks import FallbackClips
+from src.gallery.clips import GalleryClips
+from src.gallery.process import GalleryProcess
 from src.sqlite.downloads import SqliteDownloads
 from src.sqlite.friends import SqliteFriends
 from src.ytdlp.clips import YtdlpClips
@@ -29,16 +32,33 @@ engine = create_async_engine(
 )
 friends = SqliteFriends(engine)
 downloads = SqliteDownloads(engine)
-clips = YtdlpClips(
-    Path(gettempdir()),
-    {
-        "quiet": True,
-        "no_warnings": True,
-        "noprogress": True,
-        "retries": 3,
-        "socket_timeout": 30,
-        "logger": logging.getLogger("yt_dlp"),
-    },
+clips = FallbackClips(
+    YtdlpClips(
+        Path(gettempdir()),
+        {
+            "quiet": True,
+            "no_warnings": True,
+            "noprogress": True,
+            "retries": 3,
+            "socket_timeout": 30,
+            "logger": logging.getLogger("yt_dlp"),
+        },
+    ),
+    GalleryClips(
+        Path(gettempdir()),
+        GalleryProcess(
+            [
+                "--quiet",
+                "--retries",
+                "3",
+                "--http-timeout",
+                "30",
+                "-o",
+                "extractor.tiktok.audio=false",
+            ],
+            300,
+        ),
+    ),
 )
 
 dispatcher = Bot(

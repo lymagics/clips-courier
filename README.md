@@ -3,15 +3,15 @@
 [![EO principles respected here](https://www.elegantobjects.org/badge.svg)](https://www.elegantobjects.org)
 [![Docker Pulls](https://img.shields.io/docker/pulls/lymagics/clips-courier)](https://hub.docker.com/r/lymagics/clips-courier)
 
-A private Telegram bot that delivers short videos into the chat. Send it a link to a TikTok, Instagram Reels, or X videos — it downloads the clip with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and sends it back as a regular Telegram video.
+A private Telegram bot that delivers short videos and photos into the chat. Send it a link to a TikTok, Instagram, or X post — it downloads the clip with [yt-dlp](https://github.com/yt-dlp/yt-dlp), or the pictures with [gallery-dl](https://github.com/mikf/gallery-dl), and sends them back as a regular Telegram video, photo, or album.
 
-The bot is private by default: only the owner and the people the owner adds ("friends") can download videos.
+The bot is private by default: only the owner and the people the owner adds ("friends") can download posts.
 
 ## How It Works
 
 1. You send `/d <link>` to the bot.
 2. The bot checks that you are the owner or a friend.
-3. It downloads the video to a temporary folder and sends it to the chat.
+3. It downloads the post to a temporary folder and sends it to the chat: a video as a video, a picture as a photo, and several pictures as one album.
 4. The temporary folder is deleted right after, even when the download fails.
 
 ## Commands
@@ -20,7 +20,7 @@ The bot is private by default: only the owner and the people the owner adds ("fr
 |---|---|---|
 | `/s` | Everyone | Show the welcome message |
 | `/h` | Everyone | Show help |
-| `/d <link>` | Owner and friends | Download the video and send it to the chat |
+| `/d <link>` | Owner and friends | Download the video or pictures and send them to the chat |
 | `/dm <link>` | Owner and friends | Same as `/d`, plus a caption with the description, author, and platform |
 | `/f @username` | Owner only | Add a friend |
 | `/fl` | Owner only | Show the friend list |

@@ -6,6 +6,7 @@ from aiogram.types import FSInputFile
 from hamcrest import (
     assert_that,
     contains_string,
+    equal_to,
     has_item,
     has_length,
     instance_of,
@@ -36,7 +37,7 @@ async def test_sends_caption_together_with_video():
     file.write_bytes(b"\x03\x04video-612")
     message = FakeMessage("/dm https://example.test/v/612")
     await PostCommand(
-        FakeClips(FakeClip(file, "Epic gravel rally 🚗\n\n— @gravel_king · TikTok")),
+        FakeClips(FakeClip([file], "Epic gravel rally 🚗\n\n— @gravel_king · TikTok")),
         FakeDownloads({}),
     ).answer(message)
     assert_that(
@@ -54,7 +55,7 @@ async def test_sends_video_from_link():
     file.write_bytes(b"\x05\x06video-233")
     message = FakeMessage("/dm https://example.test/v/233")
     await PostCommand(
-        FakeClips(FakeClip(file, "Skate trick 🛹\n\n— @rail_rider · X")),
+        FakeClips(FakeClip([file], "Skate trick 🛹\n\n— @rail_rider · X")),
         FakeDownloads({}),
     ).answer(message)
     assert_that(
@@ -71,7 +72,7 @@ async def test_removes_file_after_delivery():
     file = folder / "clip-84.mp4"
     file.write_bytes(b"\xfd\xfcvideo-84")
     await PostCommand(
-        FakeClips(FakeClip(file, "Beach volley 🏐\n\n— @sand_smash · Instagram")),
+        FakeClips(FakeClip([file], "Beach volley 🏐\n\n— @sand_smash · Instagram")),
         FakeDownloads({}),
     ).answer(FakeMessage("/dm https://example.test/v/84"))
     assert_that(
@@ -88,7 +89,7 @@ async def test_removes_folder_after_delivery():
     file = folder / "clip-5162.mp4"
     file.write_bytes(b"\x51\x62video-5162")
     await PostCommand(
-        FakeClips(FakeClip(file, "Ice climbing 🧗\n\n— @frost_grip · X")),
+        FakeClips(FakeClip([file], "Ice climbing 🧗\n\n— @frost_grip · X")),
         FakeDownloads({}),
     ).answer(FakeMessage("/dm https://example.test/v/5162"))
     assert_that(
@@ -106,7 +107,7 @@ async def test_replies_to_command_with_downloading_status():
     file.write_bytes(b"\x31\x32video-2719")
     message = FakeMessage("/dm https://example.test/v/2719")
     await PostCommand(
-        FakeClips(FakeClip(file, "Foggy harbor ⚓\n\n— @tide_watch · Instagram")),
+        FakeClips(FakeClip([file], "Foggy harbor ⚓\n\n— @tide_watch · Instagram")),
         FakeDownloads({}),
     ).answer(message)
     assert_that(
@@ -124,7 +125,7 @@ async def test_replies_to_command_with_video():
     file.write_bytes(b"\x41\x42video-8046")
     message = FakeMessage("/dm https://example.test/v/8046")
     await PostCommand(
-        FakeClips(FakeClip(file, "Night market 🏮\n\n— @lantern_lane · TikTok")),
+        FakeClips(FakeClip([file], "Night market 🏮\n\n— @lantern_lane · TikTok")),
         FakeDownloads({}),
     ).answer(message)
     assert_that(
@@ -152,7 +153,7 @@ async def test_reports_failure_when_telegram_rejects_the_video():
     file.write_bytes(b"\x73\x05" * 53)
     message = RejectingMessage("/dm https://example.test/v/7305")
     await PostCommand(
-        FakeClips(FakeClip(file, "Bulky drone shot 🚁\n\n— @sky_crane · Instagram")),
+        FakeClips(FakeClip([file], "Bulky drone shot 🚁\n\n— @sky_crane · Instagram")),
         FakeDownloads({}),
     ).answer(message)
     assert_that(
@@ -200,7 +201,7 @@ async def test_counts_delivery_toward_sender():
     file.write_bytes(b"\x21" * 951)
     downloads = FakeDownloads({})
     await PostCommand(
-        FakeClips(FakeClip(file, "Loud parrot 🦜\n\n— @beak_boss · TikTok")),
+        FakeClips(FakeClip([file], "Loud parrot 🦜\n\n— @beak_boss · TikTok")),
         downloads,
     ).answer(
         FakeMessage("/dm https://example.test/v/951", FakeUser(45211, "teal_heron"))
@@ -209,6 +210,61 @@ async def test_counts_delivery_toward_sender():
         [stat.name() for stat in await downloads.tally()],
         has_item("teal_heron"),
         "The post command must count a delivery toward the sender",
+    )
+
+
+async def test_sends_picture_as_photo_with_caption():
+    folder = Path("tmp/test-post-photo")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "pic-3310.jpg"
+    file.write_bytes(b"\xff\xd8pic-3310")
+    message = FakeMessage("/dm https://example.test/p/3310")
+    await PostCommand(
+        FakeClips(FakeClip([file], "Golden hour 🌇\n\n— @sun_dial · Instagram")),
+        FakeDownloads({}),
+    ).answer(message)
+    assert_that(
+        message.captions,
+        has_item("Golden hour 🌇\n\n— @sun_dial · Instagram"),
+        "The post command must send a picture as a photo with the caption",
+    )
+
+
+async def test_sends_album_with_caption():
+    folder = Path("tmp/test-post-album")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    pictures = [folder / f"pic-3311-{n}.jpg" for n in (1, 2, 3)]
+    for picture in pictures:
+        picture.write_bytes(b"\xff\xd8pic-3311")
+    message = FakeMessage("/dm https://example.test/p/3311")
+    await PostCommand(
+        FakeClips(FakeClip(pictures, "Trip recap 🧳\n\n— @jet_lagged · X")),
+        FakeDownloads({}),
+    ).answer(message)
+    assert_that(
+        message.albums[0][0].caption,
+        equal_to("Trip recap 🧳\n\n— @jet_lagged · X"),
+        "The post command must send the album with the caption",
+    )
+
+
+async def test_removes_every_album_file_after_delivery():
+    folder = Path("tmp/test-post-album-cleanup")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    pictures = [folder / f"pic-3312-{n}.jpg" for n in (1, 2)]
+    for picture in pictures:
+        picture.write_bytes(b"\xff\xd8pic-3312")
+    await PostCommand(
+        FakeClips(FakeClip(pictures, "Pair of doves 🕊\n\n— @coo_coo · TikTok")),
+        FakeDownloads({}),
+    ).answer(FakeMessage("/dm https://example.test/p/3312"))
+    assert_that(
+        folder.exists(),
+        is_(False),
+        "The post command must remove the album folder after delivery",
     )
 
 

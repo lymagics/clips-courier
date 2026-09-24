@@ -10,6 +10,7 @@ from hamcrest import (
     has_length,
     instance_of,
     is_,
+    only_contains,
 )
 
 from src.commands.download import DownloadCommand
@@ -35,7 +36,9 @@ async def test_sends_video_from_link():
     file = folder / "clip-311.mp4"
     file.write_bytes(b"\x00\x01video-311")
     message = FakeMessage("/d https://example.test/v/311")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
+        message
+    )
     assert_that(
         message.videos,
         has_length(1),
@@ -49,7 +52,7 @@ async def test_removes_file_after_delivery():
     folder.mkdir(parents=True)
     file = folder / "clip-58.mp4"
     file.write_bytes(b"\xff\xfevideo-58")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
         FakeMessage("/d https://example.test/v/58")
     )
     assert_that(
@@ -65,7 +68,7 @@ async def test_removes_folder_after_delivery():
     folder.mkdir(parents=True)
     file = folder / "clip-3047.mp4"
     file.write_bytes(b"\x30\x47video-3047")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
         FakeMessage("/d https://example.test/v/3047")
     )
     assert_that(
@@ -82,7 +85,9 @@ async def test_answers_downloading_status_before_video():
     file = folder / "clip-91.mp4"
     file.write_bytes(b"\x7fvideo-91")
     message = FakeMessage("/d https://example.test/v/91")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
+        message
+    )
     assert_that(
         message.replies[0],
         contains_string("Downloading"),
@@ -97,7 +102,9 @@ async def test_replies_to_command_with_downloading_status():
     file = folder / "clip-1204.mp4"
     file.write_bytes(b"\x1b\x1cvideo-1204")
     message = FakeMessage("/d https://example.test/v/1204")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
+        message
+    )
     assert_that(
         message.quoted,
         has_item(contains_string("Downloading")),
@@ -112,7 +119,9 @@ async def test_replies_to_command_with_video():
     file = folder / "clip-6318.mp4"
     file.write_bytes(b"\x2c\x2dvideo-6318")
     message = FakeMessage("/d https://example.test/v/6318")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
+        message
+    )
     assert_that(
         message.quoted,
         has_item(instance_of(FSInputFile)),
@@ -137,7 +146,9 @@ async def test_reports_failure_when_telegram_rejects_the_video():
     file = folder / "clip-9911.mp4"
     file.write_bytes(b"\x99\x11" * 41)
     message = RejectingMessage("/d https://example.test/v/9911")
-    await DownloadCommand(FakeClips(FakeClip(file)), FakeDownloads({})).answer(message)
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
+        message
+    )
     assert_that(
         message.replies,
         has_item(contains_string("cannot download")),
@@ -182,7 +193,7 @@ async def test_counts_delivery_toward_sender():
     file = folder / "clip-777.mp4"
     file.write_bytes(b"\x00\x02video-777")
     downloads = FakeDownloads({})
-    await DownloadCommand(FakeClips(FakeClip(file)), downloads).answer(
+    await DownloadCommand(FakeClips(FakeClip([file])), downloads).answer(
         FakeMessage("/d https://example.test/v/777", FakeUser(8231, "ivory_shrew"))
     )
     assert_that(
@@ -199,7 +210,7 @@ async def test_records_delivered_file_size():
     file = folder / "clip-402.mp4"
     file.write_bytes(b"\x11" * 402)
     downloads = FakeDownloads({})
-    await DownloadCommand(FakeClips(FakeClip(file)), downloads).answer(
+    await DownloadCommand(FakeClips(FakeClip([file])), downloads).answer(
         FakeMessage("/d https://example.test/v/402", FakeUser(66502, "umber_stork"))
     )
     assert_that(
@@ -228,13 +239,83 @@ async def test_names_sender_without_username_by_id():
     file = folder / "clip-55.mp4"
     file.write_bytes(b"\x0avideo-55")
     downloads = FakeDownloads({})
-    await DownloadCommand(FakeClips(FakeClip(file)), downloads).answer(
+    await DownloadCommand(FakeClips(FakeClip([file])), downloads).answer(
         FakeMessage("/d https://example.test/v/55", FakeUser(31337))
     )
     assert_that(
         [stat.name() for stat in await downloads.tally()],
         has_item("31337"),
         "The download command must name a sender without a username by the id",
+    )
+
+
+async def test_sends_picture_as_photo():
+    folder = Path("tmp/test-download-photo")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "pic-2210.jpg"
+    file.write_bytes(b"\xff\xd8pic-2210")
+    message = FakeMessage("/d https://example.test/p/2210")
+    await DownloadCommand(FakeClips(FakeClip([file])), FakeDownloads({})).answer(
+        message
+    )
+    assert_that(
+        message.photos,
+        has_length(1),
+        "The download command must send a picture as a photo",
+    )
+
+
+async def test_sends_three_pictures_as_one_album():
+    folder = Path("tmp/test-download-album")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    pictures = [folder / f"pic-2211-{n}.jpg" for n in (1, 2, 3)]
+    for picture in pictures:
+        picture.write_bytes(b"\xff\xd8pic-2211")
+    message = FakeMessage("/d https://example.test/p/2211")
+    await DownloadCommand(FakeClips(FakeClip(pictures)), FakeDownloads({})).answer(
+        message
+    )
+    assert_that(
+        message.albums,
+        has_length(1),
+        "The download command must send three pictures as one album",
+    )
+
+
+async def test_removes_every_album_file_after_delivery():
+    folder = Path("tmp/test-download-album-cleanup")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    pictures = [folder / f"pic-2212-{n}.jpg" for n in (1, 2)]
+    for picture in pictures:
+        picture.write_bytes(b"\xff\xd8pic-2212")
+    await DownloadCommand(FakeClips(FakeClip(pictures)), FakeDownloads({})).answer(
+        FakeMessage("/d https://example.test/p/2212")
+    )
+    assert_that(
+        [picture.exists() for picture in pictures],
+        only_contains(False),
+        "The download command must remove every album file after delivery",
+    )
+
+
+async def test_records_whole_album_size():
+    folder = Path("tmp/test-download-album-size")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    pictures = [folder / f"pic-2213-{n}.png" for n in (1, 2)]
+    pictures[0].write_bytes(b"\x89" * 300)
+    pictures[1].write_bytes(b"\x89" * 213)
+    downloads = FakeDownloads({})
+    await DownloadCommand(FakeClips(FakeClip(pictures)), downloads).answer(
+        FakeMessage("/d https://example.test/p/2213", FakeUser(2213, "amber_moth"))
+    )
+    assert_that(
+        [stat.size() for stat in await downloads.tally()],
+        has_item(513),
+        "The download command must record the whole album size",
     )
 
 

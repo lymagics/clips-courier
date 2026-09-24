@@ -14,21 +14,15 @@ async def test_downloads_video_into_folder():
     folder = Path("tmp/test-ytdlp-download")
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
-    file = await YtdlpClip(
+    post = await YtdlpClip(
         "https://example.test/v/63",
         FakeTool(folder / "clip-63.mp4"),
-    ).file()
+    ).post()
     assert_that(
-        file.read_bytes(),
+        post.files()[0].read_bytes(),
         equal_to(b"\x00\x00\x00\x18ftypmp42-fake"),
         "The clip must hand back the exact file the tool downloaded",
     )
-
-
-@pytest.mark.fail_slow("5s")
-async def test_refuses_link_without_video():
-    with pytest.raises(Fault, match="cannot be downloaded"):
-        await YtdlpClip("https://example.test/v/404", BrokenTool()).file()
 
 
 @pytest.mark.fail_slow("5s")
@@ -56,7 +50,7 @@ async def test_builds_post_with_caption_from_metadata():
 
 
 @pytest.mark.fail_slow("5s")
-async def test_builds_post_with_downloaded_file():
+async def test_builds_post_with_single_downloaded_file():
     folder = Path("tmp/test-ytdlp-post")
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
@@ -72,9 +66,9 @@ async def test_builds_post_with_downloaded_file():
         ),
     ).post()
     assert_that(
-        post.file().read_bytes(),
-        equal_to(b"\x00\x00\x00\x14ftypisom-meta"),
-        "The clip must build a post that points to the downloaded file",
+        post.files(),
+        equal_to([folder / "clip-206.mp4"]),
+        "The clip must build a post that points to the single downloaded file",
     )
 
 

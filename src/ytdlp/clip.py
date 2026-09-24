@@ -16,9 +16,6 @@ class YtdlpClip(Clip):
         self.link = link
         self.ytdlp = ytdlp
 
-    async def file(self) -> Path:
-        return (await self.post()).file()
-
     async def post(self) -> Post:
         try:
             return await asyncio.to_thread(self._post)
@@ -29,7 +26,7 @@ class YtdlpClip(Clip):
         with self.ytdlp as tool:
             info = tool.extract_info(self.link)
         return StoredPost(
-            Path(info["requested_downloads"][0]["filepath"]),
+            [Path(info["requested_downloads"][0]["filepath"])],
             Caption(
                 info.get("description") or "",
                 Account(

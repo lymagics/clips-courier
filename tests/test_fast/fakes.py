@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Self
 
-from aiogram.types import FSInputFile
+from aiogram.types import FSInputFile, InputMediaPhoto, InputMediaVideo
 
 from src.domain.clip import Clip
 from src.domain.clips import Clips
@@ -11,6 +11,7 @@ from src.domain.friend import Friend, StoredFriend
 from src.domain.friends import Friends
 from src.domain.post import Post, StoredPost
 from src.domain.stat import Stat, StoredStat
+from src.gallery.gallery import Gallery
 
 
 class FakeUser:
@@ -25,13 +26,15 @@ class FakeMessage:
         self.from_user = sender
         self.replies: list[str] = []
         self.videos: list[FSInputFile] = []
-        self.captions: list[str] = []
-        self.quoted: list[str | FSInputFile] = []
+        self.photos: list[FSInputFile] = []
+        self.albums: list[list[InputMediaPhoto | InputMediaVideo]] = []
+        self.captions: list[str | None] = []
+        self.quoted: list[str | FSInputFile | list[Any]] = []
 
     async def answer(self, text: str):
         self.replies.append(text)
 
-    async def answer_video(self, video: FSInputFile, caption: str = ""):
+    async def answer_video(self, video: FSInputFile, caption: str | None = None):
         self.videos.append(video)
         self.captions.append(caption)
 
@@ -39,28 +42,32 @@ class FakeMessage:
         self.replies.append(text)
         self.quoted.append(text)
 
-    async def reply_video(self, video: FSInputFile, caption: str = ""):
+    async def reply_video(self, video: FSInputFile, caption: str | None = None):
         self.videos.append(video)
         self.captions.append(caption)
         self.quoted.append(video)
 
+    async def reply_photo(self, photo: FSInputFile, caption: str | None = None):
+        self.photos.append(photo)
+        self.captions.append(caption)
+        self.quoted.append(photo)
+
+    async def reply_media_group(self, media: list[InputMediaPhoto | InputMediaVideo]):
+        self.albums.append(media)
+        self.captions.append(media[0].caption)
+        self.quoted.append(media)
+
 
 class FakeClip(Clip):
-    def __init__(self, file: Path, caption: str = ""):
-        self.origin = file
+    def __init__(self, files: list[Path], caption: str = ""):
+        self.origin = files
         self.note = caption
-
-    async def file(self) -> Path:
-        return self.origin
 
     async def post(self) -> Post:
         return StoredPost(self.origin, self.note)
 
 
 class BrokenClip(Clip):
-    async def file(self) -> Path:
-        raise Fault("The clip is broken.")
-
     async def post(self) -> Post:
         raise Fault("The clip is broken.")
 
@@ -149,3 +156,20 @@ class BrokenTool:
 
     def extract_info(self, link: str) -> dict[str, Any]:
         raise Fault("There is no video behind the link.")
+
+
+class FakeGallery(Gallery):
+    def __init__(self, pictures: dict[str, bytes], meta: str):
+        self.pictures = pictures
+        self.meta = meta
+
+    def fetch(self, link: str, folder: Path) -> None:
+        folder.mkdir(parents=True, exist_ok=True)
+        for name, content in self.pictures.items():
+            (folder / name).write_bytes(content)
+            (folder / f"{name}.json").write_text(self.meta, encoding="utf-8")
+
+
+class BrokenGallery(Gallery):
+    def fetch(self, link: str, folder: Path) -> None:
+        raise Fault("The gallery tool could not reach the link.")
