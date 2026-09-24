@@ -64,12 +64,32 @@ clips = FallbackClips(
 dispatcher = Bot(
     StartCommand(environ.get("BOT_NAME", "")),
     HelpCommand(environ.get("BOT_NAME", ""), owner),
-    TrustedCommand(DownloadCommand(clips, downloads), owner, friends),
-    TrustedCommand(PostCommand(clips, downloads), owner, friends),
-    OwnedCommand(FriendCommand(friends), owner),
-    OwnedCommand(FriendsCommand(friends), owner),
-    OwnedCommand(RemovalCommand(friends), owner),
-    OwnedCommand(StatsCommand(downloads), owner),
+    TrustedCommand(
+        DownloadCommand(clips, downloads),
+        owner,
+        friends,
+    ),
+    TrustedCommand(
+        PostCommand(clips, downloads),
+        owner,
+        friends,
+    ),
+    OwnedCommand(
+        FriendCommand(friends),
+        owner,
+    ),
+    OwnedCommand(
+        FriendsCommand(friends),
+        owner,
+    ),
+    OwnedCommand(
+        RemovalCommand(friends),
+        owner,
+    ),
+    OwnedCommand(
+        StatsCommand(downloads),
+        owner,
+    ),
 ).bot(environ["BOT_KEY"])
 
 if __name__ == "__main__":
