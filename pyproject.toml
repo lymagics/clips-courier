@@ -9,7 +9,7 @@ dependencies = [
     "alembic==1.20.0",
     "gallery-dl==1.32.13",
     "python-dotenv==1.2.3",
-    "sqlalchemy[asyncio]==2.1.0",
+    "sqlalchemy[asyncio]==2.1.1",
     "yt-dlp[curl-cffi]==2026.8.19",
 ]
 
