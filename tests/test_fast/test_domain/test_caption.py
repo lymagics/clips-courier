@@ -1,4 +1,3 @@
-import pytest
 from hamcrest import assert_that, ends_with, equal_to, is_, less_than_or_equal_to
 
 from src.domain.caption import Caption
@@ -78,13 +77,17 @@ def test_keeps_utf16_caption_length_within_telegram_cap():
     )
 
 
-# TODO: Bug: caption footer has dangling separator. See lymagics/clips-courier#72
-@pytest.mark.skip(
-    reason="Bug: caption footer has dangling separator. See lymagics/clips-courier#72"
-)
 def test_drops_dangling_separator_for_unknown_platform():
     assert_that(
         Caption("Foggy pier at dawn", "harbor_watch", "").text(),
         equal_to("Foggy pier at dawn\n\n— @harbor_watch"),
         "The caption must not leave a dangling separator when the platform is unknown",
+    )
+
+
+def test_omits_footer_for_anonymous_source():
+    assert_that(
+        Caption("Lone gull on a mast", "  @", "").text(),
+        equal_to("Lone gull on a mast"),
+        "The caption must omit the footer when both account and platform are unknown",
     )
