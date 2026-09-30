@@ -14,11 +14,14 @@ class Caption(Reply):
             self.description.strip(),
             1022 - Utf16Text(footer).units(),
         )
-        return f"{body}\n\n{footer}" if body else footer
+        return "\n\n".join(part for part in (body, footer) if part)
 
     def _footer(self) -> str:
         name = self.account.strip().removeprefix("@")
-        return f"— @{name} · {self.platform}" if name else f"— {self.platform}"
+        line = " · ".join(
+            part for part in (f"@{name}" if name else "", self.platform) if part
+        )
+        return f"— {line}" if line else ""
 
     def _clipped(self, text: str, room: int) -> str:
         return (
