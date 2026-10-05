@@ -1,10 +1,12 @@
 from pathlib import Path
 
+import pytest
 from aiogram.types import InputMediaPhoto, InputMediaVideo
 from hamcrest import (
     assert_that,
     contains_exactly,
     equal_to,
+    greater_than_or_equal_to,
     has_length,
     instance_of,
     is_,
@@ -151,4 +153,25 @@ async def test_points_items_to_given_files():
         message.albums[0][1].media.path,
         equal_to(Path("tmp/test-album-paths/pic-4409-2.jpg")),
         "The album must point every item to the given file",
+    )
+
+
+# TODO: Bug: lone eleventh item makes a one-item media group
+# https://github.com/lymagics/clips-courier/pull/80
+@pytest.mark.skip(
+    reason=(
+        "Bug: lone eleventh item makes a one-item media group. "
+        "See PR https://github.com/lymagics/clips-courier/pull/80"
+    )
+)
+async def test_never_leaves_lone_item_in_last_group():
+    message = FakeMessage("/d https://example.test/p/4410")
+    await Album(
+        [Path(f"tmp/test-album-eleven/pic-4410-{n:02}.jpg") for n in range(11)],
+        "",
+    ).send(message)
+    assert_that(
+        [len(group) for group in message.albums],
+        only_contains(greater_than_or_equal_to(2)),
+        "The album must never send a media group with a single item",
     )
