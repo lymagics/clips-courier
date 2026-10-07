@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from aiogram.types import InputMediaPhoto, InputMediaVideo
 from hamcrest import (
     assert_that,
@@ -156,14 +155,6 @@ async def test_points_items_to_given_files():
     )
 
 
-# TODO: Bug: lone eleventh item makes a one-item media group
-# https://github.com/lymagics/clips-courier/pull/80
-@pytest.mark.skip(
-    reason=(
-        "Bug: lone eleventh item makes a one-item media group. "
-        "See PR https://github.com/lymagics/clips-courier/pull/80"
-    )
-)
 async def test_never_leaves_lone_item_in_last_group():
     message = FakeMessage("/d https://example.test/p/4410")
     await Album(
