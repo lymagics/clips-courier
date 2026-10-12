@@ -1,5 +1,6 @@
+import pytest
 from aiogram import Router
-from hamcrest import assert_that, contains_string, instance_of
+from hamcrest import assert_that, contains_string, instance_of, is_not
 
 from src.commands.owned import OwnedCommand
 from src.commands.stats import StatsCommand
@@ -35,6 +36,24 @@ async def test_shows_data_volume_in_human_readable_unit():
         message.replies[0],
         contains_string("3.0 MB"),
         "The stats command must show the data volume in a human-readable unit",
+    )
+
+
+# TODO: Bug: /st shows 1024.0 KB for a user just under 1 MB
+# https://github.com/lymagics/clips-courier/pull/87
+@pytest.mark.skip(
+    reason=(
+        "Bug: /st shows 1048575 bytes as 1024.0 KB. "
+        "See PR https://github.com/lymagics/clips-courier/pull/87"
+    )
+)
+async def test_never_shows_volume_of_1024_in_a_unit():
+    message = FakeMessage("/st", FakeUser(8023))
+    await StatsCommand(FakeDownloads({"dusky_wren": (3, 1048575)})).answer(message)
+    assert_that(
+        message.replies[0],
+        is_not(contains_string("1024.0 KB")),
+        "The stats command must show 1048575 bytes as 1.0 MB, not 1024.0 KB",
     )
 
 
