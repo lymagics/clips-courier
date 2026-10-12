@@ -1,5 +1,5 @@
 import pytest
-from hamcrest import assert_that, equal_to, is_, not_
+from hamcrest import assert_that, is_
 
 from src.domain.volume import Volume
 
@@ -24,7 +24,7 @@ def test_prints_amount_in_human_readable_unit(amount: int, expected: str):
     )
 
 
-# TODO: Bug: Volume prints 1048575 bytes as "1024.0 KB"
+# TODO: Bug: Volume prints a figure of 1024.0 instead of rolling over a unit
 # https://github.com/lymagics/clips-courier/pull/87
 @pytest.mark.skip(
     reason=(
@@ -32,9 +32,26 @@ def test_prints_amount_in_human_readable_unit(amount: int, expected: str):
         "See PR https://github.com/lymagics/clips-courier/pull/87"
     )
 )
-def test_never_prints_a_figure_of_1024_in_a_unit():
+@pytest.mark.parametrize(
+    "amount,expected",
+    [
+        (1048525, "1.0 MB"),
+        (1048575, "1.0 MB"),
+        (1073741823, "1.0 GB"),
+        (1099511627775, "1.0 TB"),
+    ],
+)
+def test_rolls_over_to_next_unit_when_figure_rounds_to_1024(amount: int, expected: str):
     assert_that(
-        Volume(1048575).text(),
-        not_(equal_to("1024.0 KB")),
-        "The volume must roll 1048575 bytes over to MB, not print 1024.0 KB",
+        Volume(amount).text(),
+        is_(expected),
+        f"The volume must roll {amount} bytes over to {expected}, not print 1024.0",
+    )
+
+
+def test_keeps_unit_when_figure_rounds_below_1024():
+    assert_that(
+        Volume(1048524).text(),
+        is_("1023.9 KB"),
+        "The volume must print 1048524 bytes as 1023.9 KB",
     )
