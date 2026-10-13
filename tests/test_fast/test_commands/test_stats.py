@@ -1,4 +1,3 @@
-import pytest
 from aiogram import Router
 from hamcrest import assert_that, contains_string, instance_of, is_not
 
@@ -39,14 +38,6 @@ async def test_shows_data_volume_in_human_readable_unit():
     )
 
 
-# TODO: Bug: /st shows 1024.0 KB for a user just under 1 MB
-# https://github.com/lymagics/clips-courier/pull/87
-@pytest.mark.skip(
-    reason=(
-        "Bug: /st shows 1048575 bytes as 1024.0 KB. "
-        "See PR https://github.com/lymagics/clips-courier/pull/87"
-    )
-)
 async def test_never_shows_volume_of_1024_in_a_unit():
     message = FakeMessage("/st", FakeUser(8023))
     await StatsCommand(FakeDownloads({"dusky_wren": (3, 1048575)})).answer(message)

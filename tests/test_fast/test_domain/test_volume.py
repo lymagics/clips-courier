@@ -24,14 +24,6 @@ def test_prints_amount_in_human_readable_unit(amount: int, expected: str):
     )
 
 
-# TODO: Bug: Volume prints a figure of 1024.0 instead of rolling over a unit
-# https://github.com/lymagics/clips-courier/pull/87
-@pytest.mark.skip(
-    reason=(
-        "Bug: Volume prints 1048575 bytes as 1024.0 KB. "
-        "See PR https://github.com/lymagics/clips-courier/pull/87"
-    )
-)
 @pytest.mark.parametrize(
     "amount,expected",
     [
