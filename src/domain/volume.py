@@ -9,7 +9,7 @@ class Volume(Reply):
         size = float(self.amount)
         unit = "B"
         for label in ("KB", "MB", "GB", "TB"):
-            if size >= 1024.0:
+            if round(size, 1) >= 1024.0:
                 size = size / 1024.0
                 unit = label
         figure = f"{size:g}" if unit == "B" else f"{size:.1f}"
