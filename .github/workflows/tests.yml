@@ -13,5 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0
-      - run: uv sync --frozen
-      - run: make unit
+      - uses: lymagics/aka-midori@v0.0.2
+        with:
+          install: uv sync --frozen
+          test: make unit
