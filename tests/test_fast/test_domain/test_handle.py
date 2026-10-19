@@ -36,3 +36,12 @@ def test_invalid_for_username_starting_with_a_digit():
         "The handle must be invalid for a username starting with a digit, "
         "since telegram usernames must start with a letter",
     )
+
+
+def test_invalid_for_username_with_kelvin_sign():
+    assert_that(
+        Handle("Kitten_9x").valid(),
+        is_(False),
+        "The handle must be invalid for a username with the Kelvin sign, "
+        "since telegram usernames allow only ASCII letters",
+    )
