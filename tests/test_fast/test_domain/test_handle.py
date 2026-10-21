@@ -14,7 +14,7 @@ def test_strips_at_sign_and_lowercases():
 
 def test_valid_for_plain_username():
     assert_that(
-        Handle("cosmic_otter").valid(),
+        Handle("cosmic_otter").acceptable(),
         is_(True),
         "The handle must be valid for a plain username without an at-sign",
     )
@@ -23,7 +23,7 @@ def test_valid_for_plain_username():
 @pytest.mark.parametrize("text", ["@ab", "two words", "dash-name", ""])
 def test_invalid_for_malformed_text(text: str):
     assert_that(
-        Handle(text).valid(),
+        Handle(text).acceptable(),
         is_(False),
         f"The handle must be invalid for the malformed text {text!r}",
     )
@@ -31,7 +31,7 @@ def test_invalid_for_malformed_text(text: str):
 
 def test_invalid_for_username_starting_with_a_digit():
     assert_that(
-        Handle("77_wombat").valid(),
+        Handle("77_wombat").acceptable(),
         is_(False),
         "The handle must be invalid for a username starting with a digit, "
         "since telegram usernames must start with a letter",
@@ -40,7 +40,7 @@ def test_invalid_for_username_starting_with_a_digit():
 
 def test_invalid_for_username_with_kelvin_sign():
     assert_that(
-        Handle("Kitten_9x").valid(),
+        Handle("Kitten_9x").acceptable(),
         is_(False),
         "The handle must be invalid for a username with the Kelvin sign, "
         "since telegram usernames allow only ASCII letters",
