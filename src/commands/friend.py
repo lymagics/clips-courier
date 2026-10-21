@@ -17,7 +17,7 @@ class FriendCommand(Command):
 
     async def answer(self, message: Message):
         words = (message.text or "").split(maxsplit=1)
-        if len(words) < 2 or not Handle(words[1]).valid():
+        if len(words) < 2 or not Handle(words[1]).acceptable():
             await message.answer("Send the command with a username: /f @username")
         else:
             await self._admit(message, Handle(words[1]).name())
