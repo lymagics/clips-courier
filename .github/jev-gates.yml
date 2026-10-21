@@ -5,6 +5,14 @@ paths:
   include: ["src/**", "tests/**", "main.py"]
   exclude: ["migrations/**"]
 
+skip:
+  - gates: [builder-named-as-a-verb]
+    name: post
+    reason: Clip.post() is the noun "post" and returns a Post
+  - gates: [builder-named-as-a-verb]
+    name: clip
+    reason: Clips.clip() is the noun "clip" and returns a Clip
+
 gates:
   - id: assertion-misses-the-claim
     rule: testing.md 1.2
