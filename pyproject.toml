@@ -7,7 +7,7 @@ dependencies = [
     "aiogram==3.31.0",
     "aiosqlite==0.22.1",
     "alembic==1.20.1",
-    "gallery-dl==1.32.18",
+    "gallery-dl==1.32.19",
     "python-dotenv==1.2.4",
     "sqlalchemy[asyncio]==2.1.6",
     "yt-dlp[curl-cffi]==2026.10.26",
