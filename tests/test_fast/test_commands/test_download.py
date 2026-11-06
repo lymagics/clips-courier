@@ -325,3 +325,21 @@ def test_builds_aiogram_router():
         instance_of(Router),
         "The download command must build an aiogram router",
     )
+
+
+async def test_sends_video_without_caption_of_post():
+    folder = Path("tmp/test-download-captionless")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    file = folder / "clip-1906.mp4"
+    file.write_bytes(b"\x19\x06video-1906")
+    message = FakeMessage("/d https://example.test/v/1906")
+    await DownloadCommand(
+        FakeClips(FakeClip([file], "Loud tuba 🎺\n\n— @brass_band · X")),
+        FakeDownloads({}),
+    ).answer(message)
+    assert_that(
+        message.captions,
+        only_contains(None),
+        "The download command must send the video without the caption of the post",
+    )
