@@ -76,3 +76,33 @@ async def test_builds_post_with_single_downloaded_file():
 async def test_refuses_post_for_link_without_video():
     with pytest.raises(Fault, match="cannot be downloaded"):
         await YtdlpClip("https://example.test/v/410", BrokenTool()).post()
+
+
+# TODO: Bug: Instagram caption credits the full name as a handle, see PR_URL
+@pytest.mark.skip(
+    reason="Bug: Instagram caption credits the full name as a handle, see PR_URL"
+)
+@pytest.mark.fail_slow("5s")
+async def test_credits_instagram_handle_instead_of_full_name():
+    folder = Path("tmp/test-ytdlp-instagram-handle")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    post = await YtdlpClip(
+        "https://example.test/reel/817",
+        MetaTool(
+            folder / "clip-817.mp4",
+            {
+                "description": "Ferris wheel at midnight 🎡",
+                "uploader_id": "58209137",
+                "uploader": "Ö L A  N I G H T S",
+                "channel": "ola_nights",
+                "extractor_key": "Instagram",
+            },
+        ),
+    ).post()
+    assert_that(
+        post.caption(),
+        equal_to("Ferris wheel at midnight 🎡\n\n— @ola_nights · Instagram"),
+        "The clip must credit the instagram handle from the channel field, "
+        "not the full name prefixed with an at sign",
+    )
