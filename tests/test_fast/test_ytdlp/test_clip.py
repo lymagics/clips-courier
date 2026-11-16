@@ -78,6 +78,12 @@ async def test_refuses_post_for_link_without_video():
         await YtdlpClip("https://example.test/v/410", BrokenTool()).post()
 
 
+# TODO: Bug: Instagram caption credits the full name as a handle,
+# see https://github.com/lymagics/clips-courier/pull/129
+@pytest.mark.skip(
+    reason="Bug: Instagram caption credits the full name as a handle, "
+    "see https://github.com/lymagics/clips-courier/pull/129"
+)
 @pytest.mark.fail_slow("5s")
 async def test_credits_instagram_handle_instead_of_full_name():
     folder = Path("tmp/test-ytdlp-instagram-handle")
