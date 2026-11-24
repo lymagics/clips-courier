@@ -108,3 +108,26 @@ async def test_credits_instagram_handle_instead_of_full_name():
         "The clip must credit the instagram handle from the channel field, "
         "not the full name prefixed with an at sign",
     )
+
+
+@pytest.mark.fail_slow("5s")
+async def test_refuses_post_when_tool_downloads_only_slideshow_audio():
+    folder = Path("tmp/test-ytdlp-slideshow-audio")
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    with pytest.raises(Fault, match="cannot be downloaded"):
+        await YtdlpClip(
+            "https://example.test/photo/7139",
+            MetaTool(
+                folder / "slide-7139.mp3",
+                {
+                    "description": "Seven lighthouses of the north 🗼",
+                    "uploader_id": "6604511138619654149",
+                    "uploader": "keeper_of_lamps",
+                    "extractor_key": "TikTok",
+                    "ext": "mp3",
+                    "vcodec": "none",
+                    "acodec": "mp3",
+                },
+            ),
+        ).post()
