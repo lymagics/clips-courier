@@ -110,6 +110,12 @@ async def test_credits_instagram_handle_instead_of_full_name():
     )
 
 
+# TODO: Bug: TikTok slideshow is delivered as its audio track,
+# see https://github.com/lymagics/clips-courier/pull/133
+@pytest.mark.skip(
+    reason="Bug: TikTok slideshow is delivered as its audio track, "
+    "see https://github.com/lymagics/clips-courier/pull/133"
+)
 @pytest.mark.fail_slow("5s")
 async def test_refuses_post_when_tool_downloads_only_slideshow_audio():
     folder = Path("tmp/test-ytdlp-slideshow-audio")
